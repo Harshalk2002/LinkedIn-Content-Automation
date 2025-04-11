@@ -1,0 +1,306 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 1,7,11,15 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1220,
+        0
+      ],
+      "id": "ab54d1e2-a0b3-476c-ba1b-3d95cfdb416d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://feeds.feedburner.com/TechCrunch",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        -380,
+        -100
+      ],
+      "id": "f1ea7992-9d04-4c5c-abdf-2a516559ed48",
+      "name": "TechCrunch RSS",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "https://machinelearningmastery.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        -380,
+        -300
+      ],
+      "id": "dfc5d35c-2f22-4b05-b0c8-d05d2bcbb7b9",
+      "name": "Machine Learning Mastery",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "https://towardsdatascience.com/feed",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        -380,
+        100
+      ],
+      "id": "9749b90e-f57d-459b-86a5-6117d6ac2c13",
+      "name": "Towards Data Science",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "https://www.analyticsvidhya.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        300
+      ],
+      "id": "8d8ff43f-1f7a-45e9-a1d3-b76a0d41b621",
+      "name": "Analytics Vidhya",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        220,
+        -20
+      ],
+      "id": "9296d47b-0ddc-4bbc-8519-bcf4c164c93f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You're an expert AI writing assistant specialized in creating high-performing LinkedIn posts.\n\nYour job is to:\n- Summarize and rewrite the following tech-related content.\n- Make it sound engaging, professional, and easy to read.\n- Use clear structure, line breaks, and formatting.\n- Add 4–6 relevant emojis to enhance readability and tone.\n- Include 2–3 trending hashtags at the end.\n- Keep the post under 300 words and suitable for LinkedIn's audience.\n- Only return one well-written post (no lists or multiple options).\n\nLet your output feel like it was written by a top-tier content creator.\n\nDo not include anything else beyond the single formatted post.\n",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.allContent }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        920,
+        0
+      ],
+      "id": "83b5a7b4-a9d4-4422-9e45-625e20f098e2",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "m5KqYvgPt9WEdIoX",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let combined = items.map(item =>\n  `🔗 ${item.json.title}\\n${item.json.link}\\n${item.json.content}`\n).join('\\n\\n');\n\n// Trim to ~8000 characters\nlet trimmed = combined.slice(0, 8000);\n\nreturn [{\n  json: {\n    allContent: trimmed\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "6ca93947-c378-4b80-a8df-3776a4e2b55d",
+      "name": "Merge "
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "harshalkamble2511@gmail.com",
+        "subject": "Approve Request",
+        "message": "=Here's a draft of your LinkedIn post:\n\n{{$json[\"message\"][\"content\"]}}\n\nIf approved, mark 'Yes' in the Google Sheet to publish automatically.\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1280,
+        0
+      ],
+      "id": "d4f5e13b-21c0-4c53-937e-7df199c286a3",
+      "name": "Gmail",
+      "webhookId": "b3a4a124-b744-48d3-a316-ce0e8aed53b1"
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        0
+      ],
+      "id": "3f0c7af0-0ca7-4961-b4bb-04e0c313a620",
+      "name": "LinkedIn"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "TechCrunch RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Towards Data Science",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Analytics Vidhya",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Machine Learning Mastery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TechCrunch RSS": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Machine Learning Mastery": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Towards Data Science": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Analytics Vidhya": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge ": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0b225247-5b4e-464c-975b-b5fb5030bb57",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "95113fc8d3bb6e832ea76ad1dd975d9005cfa8d31ec0489297af1a1013d4bf46"
+  },
+  "id": "iWHjImmPw9B9MBdm",
+  "tags": []
+}
